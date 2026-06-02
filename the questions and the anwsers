@@ -1,0 +1,210 @@
+--How many pizzas were ordered?
+select count(pizza_id) as pizza_ordered 
+from pizza_runner.cleaned_customer_orders
+
+--How many unique customer orders were made?
+select  count (distinct(order_id)) as pizza_ordered 
+from pizza_runner.cleaned_customer_orders
+
+
+--How many successful orders were delivered by each runner?
+select runner_id,count(order_id) as success
+from pizza_runner.cleaned_runner_orders
+where cancellation is  null
+group by runner_id
+
+
+How many of each type of pizza was delivered?
+
+select co.pizza_id,count(co.pizza_id)  as type_of_pizza
+from pizza_runner.cleaned_customer_orders co
+join pizza_runner.cleaned_runner_orders ro
+on co.order_id=ro.order_id
+where cancellation is null
+group by co.pizza_id
+
+How many Vegetarian and Meatlovers were ordered by each customer?
+
+select co.customer_id,pz.pizza_name,count(co.pizza_id)  as type_of_pizza
+from pizza_runner.cleaned_customer_orders co
+join pizza_runner.pizza_names pz
+on co.pizza_id=pz.pizza_id
+
+group by co.customer_id,pz.pizza_name
+
+or
+
+
+
+SELECT 
+    customer_id,
+    -- إذا كانت البيتزا رقم 1 (Meatlovers) احسبها، وإلا ضع 0 واجمعهم
+    SUM(CASE WHEN pizza_id = 1 THEN 1 ELSE 0 END) AS meatlovers_count,
+    
+    -- إذا كانت البيتزا رقم 2 (Vegetarian) احسبها، وإلا ضع 0 واجمعهم
+    SUM(CASE WHEN pizza_id = 2 THEN 1 ELSE 0 END) AS vegetarian_count
+
+FROM pizza_runner.cleaned_customer_orders
+GROUP BY customer_id
+ORDER BY customer_id;
+
+
+--What was the maximum number of pizzas delivered in a single order?
+
+select ro.order_id,count(co.order_id) as max_order
+from pizza_runner.cleaned_customer_orders co
+join pizza_runner.cleaned_runner_orders ro
+on co.order_id=ro.order_id
+where cancellation is null
+group by ro.order_id
+order by count(co.order_id) desc
+limit 1
+
+--For each customer, how many delivered pizzas had at least 1 change and how many had no changes?
+select co.customer_id,
+sum (case when  extras is not null or exclusions is not null then 1 else 0 end ) as  chnge,
+sum (case when extras is null and exclusions is null then 1 else 0 end) as no_chnge
+from pizza_runner.cleaned_customer_orders co
+join pizza_runner.cleaned_runner_orders  ro
+on co.order_id=ro.order_id
+where cancellation is null
+group by co.customer_id
+
+
+How many pizzas were delivered that had both exclusions and extras
+
+select 
+sum (case when  extras is not null and exclusions is not null then 1 else 0 end ) as  chnge
+
+from pizza_runner.cleaned_customer_orders co
+join pizza_runner.cleaned_runner_orders  ro
+on co.order_id=ro.order_id
+where cancellation is null
+
+What was the total volume of pizzas ordered for each hour of the day?
+
+select count(co.order_id) as max_orders,extract(hour from co.order_time ) as hours
+from pizza_runner.cleaned_customer_orders co
+group by extract(hour from co.order_time )
+
+--What was the volume of orders for each day of the week?
+select to_char(co.order_time,'day') as days,count(distinct co.order_id) as order_days
+from pizza_runner.cleaned_customer_orders co
+group by days
+
+
+How many runners signed up for each 1 week period? (i.e. week starts 2021-01-01)
+
+select  floor((registration_date -'2021-01-01'::date)/7)+1 as daysofweek ,count(runner_id) as runners
+from 
+pizza_runner.runners
+
+group by daysofweek
+order by daysofweek 
+
+
+--What was the average time in minutes it took for each runner to arrive at the Pizza Runner HQ to pickup the order?
+
+with avgs as (
+select
+ro.runner_id,extract(epoch from (ro.pickup_time::timestamp-co.order_time::timestamp))/60 as pick
+from pizza_runner.cleaned_customer_orders co
+join pizza_runner.cleaned_runner_orders ro
+on co.order_id=ro.order_id
+where cancellation is null)
+
+select runner_id,round(avg(pick),2)
+from avgs
+group by runner_id
+
+--Is there any relationship between the number of pizzas and how long the order takes to prepare?
+
+select co.order_id, extract (epoch from (ro.pickup_time::timestamp-co.order_time::timestamp))/60 as times,
+count (co.order_id) as orders
+from pizza_runner.cleaned_customer_orders co
+join pizza_runner.cleaned_runner_orders ro
+on co.order_id=ro.order_id
+
+where cancellation is null
+group by co.order_id,times
+
+What was the average distance travelled for each customer?
+
+select co.customer_id,avg(ro.distance_km) as avgs
+from pizza_runner.cleaned_runner_orders ro
+join pizza_runner.cleaned_customer_orders co
+on co.order_id=ro.order_id
+where cancellation is null
+group by co.customer_id
+
+What was the difference between the longest and shortest delivery times for all orders?
+
+select max(duration_mins)-min (duration_mins)
+from pizza_runner.cleaned_runner_orders
+where cancellation is null
+
+What was the average speed for each runner for each delivery and do you notice any trend for these values?
+with rnk as (
+select runner_id,order_id,distance_km,round((distance_km/duration_mins*60),2) as speed
+from pizza_runner.cleaned_runner_orders
+where cancellation is null)
+
+select runner_id,order_id,distance_km,avg(speed)   avg_speed
+from rnk
+group by runner_id,order_id,distance_km
+
+What are the standard ingredients for each pizza?
+with rnk as (
+select pr.pizza_id,unnest (string_to_array(pr.toppings,','))::integer as topping_id
+from pizza_runner.pizza_recipes pr)
+
+select pizza_id,topping_name
+from rnk
+join pizza_runner.pizza_toppings pt
+on pt.topping_id=rnk.topping_id
+
+
+
+What was the most commonly added extra?
+with rnk as (
+select co.order_id,unnest (string_to_array (co.extras,',')) ::integer as topping_id 
+from pizza_runner.cleaned_customer_orders co
+where co.extras is not null)
+
+select pt.topping_name,count (*) most_extra
+from rnk
+join pizza_runner.pizza_toppings pt
+on pt.topping_id=rnk.topping_id
+group by pt.topping_name
+order by most_extra desc
+limit 1
+
+What was the most common exclusion?
+
+with rnk as (
+select co.order_id,unnest (string_to_array (co.exclusions,',')) ::integer as topping_id 
+from pizza_runner.cleaned_customer_orders co
+where co.exclusions is not null)
+
+select pt.topping_name,count (*) most_extra
+from rnk
+join pizza_runner.pizza_toppings pt
+on pt.topping_id=rnk.topping_id
+group by pt.topping_name
+order by most_extra desc
+limit 1
+
+If a Meat Lovers pizza costs $12 and Vegetarian costs $10 and there were no charges for changes - how much money has Pizza Runner made so far if there are no delivery fees?
+
+with rnk as (
+select 
+sum(case when co.pizza_id=1 then 12 else 0 end) as meat,
+sum(case when co.pizza_id=2 then 10 else 0 end) as veg
+from pizza_runner.cleaned_runner_orders ro
+join pizza_runner.cleaned_customer_orders co
+on co.order_id=ro.order_id
+where ro.cancellation is null
+)
+
+select (meat+veg) as total
+from rnk
