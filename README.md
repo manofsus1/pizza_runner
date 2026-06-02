@@ -1,8 +1,5 @@
-# pizza_runner
-📁 Pizza-Runner-SQL-Case-Study
- ├── 📄 README.md              (الملف الرئيسي الذي يشرح المشروع ويظهر النتائج)
- ├── 📁 Scripts
- │    ├── 📜 01_data_cleaning.sql   (أكواد إنشاء الجداول والتنظيف التي كتبتها)
- │    ├── 📜 02_pizza_metrics.sql   (القسم الأول من الأسئلة)
- │    ├── 📜 03_runner_orders.sql   (القسم الثاني من الأسئلة)
- │    └── 📜 04_pricing_revenue.sql (القسم الأخير الخاص بالأرباح)
+Danny was scrolling through his Instagram feed when something really caught his eye - “80s Retro Styling and Pizza Is The Future!”
+
+Danny was sold on the idea, but he knew that pizza alone was not going to help him get seed funding to expand his new Pizza Empire - so he had one more genius idea to combine with it - he was going to Uberize it - and so Pizza Runner was launched!
+
+Danny started by recruiting “runners” to deliver fresh pizza from Pizza Runner Headquarters (otherwise known as Danny’s house) and also maxed out his credit card to pay freelance developers to build a mobile app to accept orders from customers.
