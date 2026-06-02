@@ -1,0 +1,28 @@
+# 🍕 Case Study #2 - Pizza Runner 🏃‍♂️
+
+## 📌 Introduction
+Danny was scrolling through his Instagram feed when something caught his eye — “80s Retro Styling and Pizza Is The Future!” Danny was sold on the idea, but he knew that pizza alone wouldn’t help him get seed funding to expand his new empire. He came up with a brilliant idea to combine his love for pizza with an Uber-like delivery service: **Pizza Runner**.
+
+This repository contains my solutions to the case study questions using **PostgreSQL**, focusing on data cleaning, customer metrics, runner performance, and financial analytics.
+
+---
+
+## 🛠️ Skills Demonstrated
+- **Data Cleaning & Transformation:** Handling `NULL` values, trimming strings, data type casting (`::timestamp`, `::numeric`).
+- **Advanced SQL Functions:** `CASE WHEN`, `UNNEST`, `STRING_TO_ARRAY`, Aggregate Functions (`SUM`, `COUNT`, `AVG`).
+- **Common Table Expressions (CTEs):** Breaking down complex business questions into modular, readable logic.
+- **Business Performance Analytics:** Calculating metrics like runner speed, preparation time, and business revenue.
+
+---
+
+## 🧼 Data Cleaning Highlights
+The original datasets contained several inconsistencies such as missing values labeled as textual `'null'`, empty strings `''`, and inconsistent units (`km`, `mins`). 
+
+I created optimized, cleaned versions of the tables:
+- `cleaned_customer_orders`
+- `cleaned_runner_orders`
+
+*You can find the full cleaning script in the `Scripts/01_data_cleaning.sql` file.*
+
+---
+
